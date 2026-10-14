@@ -36,6 +36,7 @@ function App() {
     headerText: '',
     notes: '',
   });
+  const [logo, setLogo] = useState(null); // { dataUrl, naturalW, naturalH, position }
   const [srtText, setSrtText] = useState('');
   const [fileName, setFileName] = useState('');
   const [status, setStatus] = useState(null); // { kind: 'ok'|'error', msg }
@@ -75,6 +76,31 @@ function App() {
     [onFile]
   );
 
+  const onLogoFile = useCallback(async (file) => {
+    if (!file) return;
+    if (!/^image\/(png|jpeg|webp|gif|bmp)$/i.test(file.type)) {
+      setStatus({ kind: 'error', msg: 'Unsupported image type — use PNG or JPG.' });
+      return;
+    }
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('read failed'));
+      reader.readAsDataURL(file);
+    });
+    const dims = await new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve({ naturalW: img.naturalWidth, naturalH: img.naturalHeight });
+      img.onerror = () => resolve(null);
+      img.src = dataUrl;
+    });
+    if (!dims) {
+      setStatus({ kind: 'error', msg: 'Could not read image dimensions.' });
+      return;
+    }
+    setLogo({ ...dims, dataUrl, position: 'left' });
+  }, []);
+
   const chooseLang = (code) => {
     setLang(code);
     persistLang(code);
@@ -107,12 +133,13 @@ function App() {
     setBusy(kind);
     setStatus(null);
     try {
+      const headerWithLogo = { ...header, logo };
       if (kind === 'docx') {
-        const blob = await buildDocxBlob({ header, parsed });
+        const blob = await buildDocxBlob({ header: headerWithLogo, parsed });
         downloadBlob(blob, `${baseName}.docx`);
         setStatus({ kind: 'ok', msg: t('dlOne', { file: `${baseName}.docx` }) });
       } else {
-        const blob = await buildPdfBlob({ header, parsed });
+        const blob = await buildPdfBlob({ header: headerWithLogo, parsed });
         downloadBlob(blob, `${baseName}.pdf`);
         setStatus({ kind: 'ok', msg: t('dlOne', { file: `${baseName}.pdf` }) });
       }
@@ -132,10 +159,11 @@ function App() {
     setBusy('both');
     setStatus(null);
     try {
-      const docxBlob = await buildDocxBlob({ header, parsed });
+      const headerWithLogo = { ...header, logo };
+      const docxBlob = await buildDocxBlob({ header: headerWithLogo, parsed });
       downloadBlob(docxBlob, `${baseName}.docx`);
       await new Promise((r) => setTimeout(r, 400));
-      const pdfBlob = await buildPdfBlob({ header, parsed });
+      const pdfBlob = await buildPdfBlob({ header: headerWithLogo, parsed });
       downloadBlob(pdfBlob, `${baseName}.pdf`);
       setStatus({
         kind: 'ok',
@@ -195,6 +223,48 @@ function App() {
               onChange={setField('notes')}
               placeholder={t('notesPlaceholder')}
             />
+          </label>
+
+          <label className="field-label">
+            {t('logoLabel')}
+            <div className="logo-row">
+              <label className="logo-choose btn">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+                  onChange={(e) => onLogoFile(e.target.files && e.target.files[0])}
+                />
+                {t('logoChoose')}
+              </label>
+              {logo ? (
+                <>
+                  <img className="logo-thumb" src={logo.dataUrl} alt="logo preview" />
+                  <div className="logo-pos" role="radiogroup" aria-label={t('logoPosLabel')}>
+                    <span className="logo-pos-label">{t('logoPosLabel')}</span>
+                    {['left', 'center', 'right'].map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        className={`chip ${logo.position === p ? 'active' : ''}`}
+                        onClick={() => setLogo((l) => ({ ...l, position: p }))}
+                        aria-pressed={logo.position === p}
+                      >
+                        {t(`logoPos${p[0].toUpperCase()}${p.slice(1)}`)}
+                      </button>
+                    ))}
+                    <button
+                      className="chip remove"
+                      onClick={() => setLogo(null)}
+                      title={t('logoRemove')}
+                    >
+                      {t('logoRemove')}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <span className="logo-none">{t('logoNone')}</span>
+              )}
+            </div>
           </label>
 
           <h2>{t('step2')}</h2>
@@ -301,7 +371,17 @@ function App() {
             {t('previewTitle')} <span className="preview-note">{t('previewNote')}</span>
           </h2>
           {preview ? (
-            <pre className="script-preview">{preview.trimEnd()}</pre>
+            <>
+              {logo && (
+                <div
+                  className={`preview-logo pos-${logo.position}`}
+                  data-pos={logo.position}
+                >
+                  <img src={logo.dataUrl} alt="logo" />
+                </div>
+              )}
+              <pre className="script-preview">{preview.trimEnd()}</pre>
+            </>
           ) : (
             <div className="preview-empty">{t('previewEmpty')}</div>
           )}

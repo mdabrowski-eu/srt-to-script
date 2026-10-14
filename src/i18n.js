@@ -25,6 +25,15 @@ const DICT = {
     notesLabel: 'Notes (bottom of script)',
     notesPlaceholder: 'Optional production notes',
 
+    logoLabel: 'Logo image (above header)',
+    logoChoose: 'Choose image…',
+    logoNone: 'PNG / JPG, e.g. a letterhead logo',
+    logoPosLabel: 'Position:',
+    logoPosLeft: 'Left',
+    logoPosCenter: 'Center',
+    logoPosRight: 'Right',
+    logoRemove: '✕ Remove',
+
     step2: '2 · Subtitles (SRT)',
     dropDrop: 'Drop an .srt file here',
     dropChoose: ' or click to choose',
@@ -71,8 +80,8 @@ const DICT = {
   },
 
   pl: {
-    docTitle: 'SRT → Scenariusz dla aktora',
-    h1: 'SRT → Scenariusz dla aktora',
+    docTitle: 'SRT → Scenariusz dla lektora',
+    h1: 'SRT → Scenariusz dla lektora',
     tagline:
       'Zamień napisy SRT na czytelny scenariusz do dubbingu / nagrania lektorskiego - DOCX + PDF, krój maszynopisu, pełne wsparcie polskich znaków.',
 
@@ -83,6 +92,15 @@ const DICT = {
     headerPlaceholder: 'np.\nRozczarowani\nScenka 1 - Kuchnia, rano\nS01E01',
     notesLabel: 'Notatki (na dole scenariusza)',
     notesPlaceholder: 'Opcjonalne notatki produkcyjne',
+
+    logoLabel: 'Obraz nagłówka (np. logo)',
+    logoChoose: 'Wybierz obraz…',
+    logoNone: 'PNG / JPG, np. logo na paperze firmowym',
+    logoPosLabel: 'Położenie:',
+    logoPosLeft: 'Lewo',
+    logoPosCenter: 'Środek',
+    logoPosRight: 'Prawo',
+    logoRemove: '✕ Usuń',
 
     step2: '2 · Napisy (SRT)',
     dropDrop: 'Przeciągnij tutaj plik .srt',

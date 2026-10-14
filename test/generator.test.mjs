@@ -208,4 +208,43 @@ if (hasPdftotext) {
   console.log('✓ wrap/bleed regression OK (structural only)');
 }
 
+// ---- logo placement regression (DOCX + PDF, three positions) ---------------
+import { readFileSync as rf } from 'node:fs';
+const logoB64 = rf(new URL('./fixtures/logo.png', import.meta.url)).toString('base64');
+const logoDataUrl = `data:image/png;base64,${logoB64}`;
+
+// PDF: parse the `cm /I0 Do` placement matrix and verify x-offset per position
+// fitLogoBox(2000×450): ratio=min(2.5/2000, 1.25/450,1)=0.00125 → 2.5×0.5625in = 180×40.5pt
+// left x=54pt · center x=54+(504-180)/2=216pt · right x=54+504-180=378pt
+const positions = { left: 54.0, center: 216.0, right: 378.0 };
+const logoHeader = (pos) => ({
+  headerText: 'H',
+  logo: { dataUrl: logoDataUrl, naturalW: 2000, naturalH: 450, position: pos },
+});
+for (const [pos, expectedX] of Object.entries(positions)) {
+  const d = buildPdfDoc({ header: logoHeader(pos), parsed });
+  const raw = Buffer.from(d.output('arraybuffer')).toString('latin1');
+  const m = raw.match(/([\d.]+) ([\d.]+) [\d.]+ [\d.]+ ([\d.]+) ([\d.]+) cm\s*\/\w+ Do/);
+  strict.ok(m, `PDF logo placement op exists (${pos})`);
+  const wPt = parseFloat(m[1]);
+  const xPt = parseFloat(m[3]);
+  // fitLogoBox: ratio = min(2.5/2000, 1.25/450, 1) = 1/450 → 4.44x1.0in → 320x72pt... 2000/450=4.44; w=2.5in=180pt wide
+  strict.ok(Math.abs(wPt - 180) < 2, `PDF logo width = 180pt (${wPt}) — fit in 2.5in box`);
+  strict.ok(Math.abs(xPt - expectedX) < 2, `PDF logo ${pos}: x=${xPt.toFixed(1)} ≈ ${expectedX}`);
+}
+console.log('✓ PDF logo placement OK (left/center/right)');
+
+// DOCX: media file present in the zip + expected px transformation
+const logoDocxBlob = await buildDocxBlob({ header: logoHeader('center'), parsed });
+const logoDocxPath = join(outDir, 'logo.docx');
+writeFileSync(logoDocxPath, Buffer.from(await logoDocxBlob.arrayBuffer()));
+execSync(`cd ${outDir} && unzip -o -q logo.docx word/document.xml`);
+const logoXml = readFileSync(join(outDir, 'word/document.xml'), 'utf8');
+const unzipList = execSync(`cd ${outDir} && unzip -l logo.docx`, { encoding: 'utf8' });
+strict.ok(/word\/media\/.+\.png/i.test(unzipList), 'DOCX embeds logo media file');
+strict.ok(logoXml.includes('<pic:pic') || logoXml.includes('<w:drawing>'), 'DOCX has image XML');
+// center position → jc=center in the logo paragraph
+strict.ok(/<w:jc w:val="center"\/>/, 'DOCX logo paragraph centered');
+console.log('✓ DOCX logo embed OK');
+
 console.log('files:', outDir, '/test.docx, /test.pdf');

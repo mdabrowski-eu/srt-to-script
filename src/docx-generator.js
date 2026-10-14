@@ -12,12 +12,14 @@ import {
   Packer,
   Paragraph,
   TextRun,
+  ImageRun,
   AlignmentType,
   BorderStyle,
   PageNumber,
   Footer,
 } from 'docx';
 import { splitHeaderLines } from './parser.js';
+import { fitLogoBox, base64FromDataUrl, imageTypeFromDataUrl } from './image.js';
 
 const FONT = 'Courier New';
 const PAGE_W_TWIP = 12240; // Letter 8.5"
@@ -93,14 +95,45 @@ function blank() {
 }
 
 /**
+ * Header image (logo): inline image in an aligned paragraph (left/center/
+ * right within the 7" column). Rendering is identical across Word/LibreOffice,
+ * and the image sits above the divider line in the header block.
+ */
+function logoParagraph(dataUrl, naturalW, naturalH, position) {
+  void base64FromDataUrl;
+  const { w, h } = fitLogoBox(naturalW, naturalH);
+  const alignment =
+    position === 'right' ? AlignmentType.RIGHT : position === 'center' ? AlignmentType.CENTER : AlignmentType.LEFT;
+  return new Paragraph({
+    alignment,
+    spacing: { after: 120 },
+    children: [
+      new ImageRun({
+        type: imageTypeFromDataUrl(dataUrl) || 'png',
+        data: Uint8Array.from(base64FromDataUrl(dataUrl), (c) => c.charCodeAt(0)),
+        transformation: {
+          width: Math.round(w * 96), // docx ImageRun uses px (96/in)
+          height: Math.round(h * 96),
+        },
+      }),
+    ],
+  });
+}
+
+/**
  * Build the DOCX Document from parsed blocks + form header.
  * Returns a Blob in the browser (Buffer-compatible in Node).
  */
 export function buildDocxBlob({ header = {}, parsed }) {
-  const { headerText = '', notes = '' } = header;
+  const { headerText = '', notes = '', logo = null } = header;
   const { blocks, characters } = parsed;
 
   const children = [];
+
+  // ---- header image (logo), above the header text block ----
+  if (logo && logo.dataUrl && logo.naturalW && logo.naturalH) {
+    children.push(logoParagraph(logo.dataUrl, logo.naturalW, logo.naturalH, logo.position || 'left'));
+  }
 
   // ---- header (from form) ----
   const headerLines = splitHeaderLines(headerText);

@@ -15,7 +15,7 @@ import { chromium } from 'playwright-core';
 import { resolveChromium } from './chromium.mjs';
 
 const CHROMIUM = resolveChromium();
-const URL = process.env.E2E_URL || 'http://localhost:4173/';
+const APP_URL = process.env.E2E_URL || 'http://localhost:4173/';
 
 const outDir = mkdtempSync(join(tmpdir(), 'srt-e2e-'));
 const browser = await chromium.launch({ executablePath: CHROMIUM, headless: true });
@@ -27,7 +27,7 @@ page.on('console', (m) => {
   if (m.type() === 'error') errors.push(m.text());
 });
 
-await page.goto(URL);
+await page.goto(APP_URL);
 strict.equal(await page.title(), 'SRT → Voice Actor Script', 'page loads');
 
 // ---- fill header (single multi-line text box) ------------------------------
@@ -138,6 +138,30 @@ const pdf2Fonts = execSync(`pdffonts ${pdf2Path} 2>/dev/null`, { encoding: 'utf8
 strict.ok(pdf2Fonts.includes('CourierPrime'), 'second PDF still embeds CourierPrime');
 const pdf2Text = execSync(`pdftotext -layout ${pdf2Path} - 2>/dev/null`, { encoding: 'utf8', shell: '/bin/bash' });
 strict.ok(pdf2Text.includes('Zażółć gęślą jaźń'), 'second PDF Polish text intact');
+
+// ---- logo upload flow --------------------------------------------------------
+const logoPath = join(new URL('.', import.meta.url).pathname, 'fixtures/logo.png');
+await page.setInputFiles('.logo-choose input[type=file]', logoPath);
+await page.waitForSelector('.preview-logo');
+strict.equal(await page.getAttribute('.preview-logo', 'data-pos'), 'left', 'logo defaults to left');
+await page.click('.logo-pos .chip:has-text("Center")');
+strict.equal(await page.getAttribute('.preview-logo', 'data-pos'), 'center', 'logo position switch to center');
+strict.ok(await page.isVisible('.logo-thumb'), 'logo thumbnail shown');
+
+// logoed PDF download → verify an image is actually embedded
+const logoPdfPromise = page.waitForEvent('download', { timeout: 20000 });
+await page.click('button:has-text("PDF only")');
+const logoPdfDl = await logoPdfPromise;
+const logoPdfPath = join(outDir, 'logoed.pdf');
+await logoPdfDl.saveAs(logoPdfPath);
+const imgList = execSync(`pdfimages -list ${logoPdfPath} 2>/dev/null || true`, { encoding: 'utf8', shell: '/bin/bash' });
+strict.ok(/image|smask/.test(imgList), 'logoed PDF embeds the image');
+console.log('logoed PDF images:', imgList.split('\n').filter((l) => l.includes('image')).length);
+
+// remove logo → preview clears
+await page.click('.chip.remove');
+await page.waitForSelector('.preview-logo', { state: 'detached' });
+strict.ok(!(await page.isVisible('.logo-thumb')), 'logo removed from UI');
 
 // ---- screenshot of the app UI -------------------------------------------------
 await page.setViewportSize({ width: 1280, height: 900 });

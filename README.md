@@ -25,7 +25,10 @@ In the app:
    and the *first line* is also used for the output filename. An optional **notes** field goes
    at the bottom of the script.
 2. Drop / choose an `.srt` file, or paste raw SRT text.
-3. Click **Download DOCX + PDF** (or either format alone). Filenames are derived from the first
+3. Optionally add a **logo image** (PNG/JPG/WebP/GIF/BMP) shown above the header block —
+   choose its position: left, center or right. The image is scaled to fit
+   (max 2.5″ × 1.25″, never upscaled) and the live preview mirrors the placement.
+4. Click **Download DOCX + PDF** (or either format alone). Filenames are derived from the first
    header line (or the uploaded file name), slugified safely.
 
 ## Input structure
@@ -57,6 +60,8 @@ Processing rules:
 
 ## Output layout
 
+- Optional logo image above the header block, positioned left/center/right
+  (scaled to max 2.5″ × 1.25″, aspect ratio preserved, small images never upscaled).
 - Header block from the form (one centered line per text box row, between drawn divider lines).
 - `[hh:mm:ss]` start timestamp, left-aligned.
 - Character name, centered, bold.

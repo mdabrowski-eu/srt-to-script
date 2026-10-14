@@ -16,6 +16,7 @@ import {
   CourierPrime_BoldItalic,
 } from './fonts.js';
 import { splitHeaderLines, wrapText } from './parser.js';
+import { fitLogoBox, imageXIn, LOGO_MAX_H_IN } from './image.js';
 
 const PT_PER_IN = 72;
 const PAGE_W = 8.5 * PT_PER_IN;   // 612pt US Letter
@@ -75,7 +76,7 @@ function calibrateMonospace(doc) {
  * Build the PDF (US Letter). Returns the jsPDF instance (.output('blob') etc.).
  */
 export function buildPdfDoc({ header = {}, parsed }) {
-  const { headerText = '', notes = '' } = header;
+  const { headerText = '', notes = '', logo = null } = header;
   const { blocks, characters } = parsed;
 
   const doc = new jsPDF({ unit: 'pt', format: 'letter', orientation: 'portrait' });
@@ -127,6 +128,22 @@ export function buildPdfDoc({ header = {}, parsed }) {
 
   /** Word-wrap comes from parser.js (shared with the live preview). */
 
+  // ---- header image (logo), above the header text block ----
+  if (logo && logo.dataUrl && logo.naturalW && logo.naturalH) {
+    const { w, h } = fitLogoBox(logo.naturalW, logo.naturalH);
+    const wPt = w * PT_PER_IN;
+    const hPt = h * PT_PER_IN;
+    const xPt = imageXIn(logo.position || 'left', w) * PT_PER_IN;
+    try {
+      doc.addImage(logo.dataUrl, undefined, xPt, y - FONT_SIZE, wPt, hPt);
+      // reserve vertical space equal to the image height
+      const rows = Math.ceil(hPt / lineH);
+      y += rows * lineH;
+    } catch (e) {
+      console.warn('logo embed failed:', e.message);
+    }
+  }
+
   // ---- header (from form) — centered, between drawn rules ----
   const headerLines = splitHeaderLines(headerText);
   if (headerLines.length > 0) {
@@ -162,8 +179,9 @@ export function buildPdfDoc({ header = {}, parsed }) {
 
   // ---- footer section: left-aligned at the margin, full-width wrap ----
   if (notes) {
-    for (const wrapped of wrapText(`NOTES: ${notes}`, fullCols)) {
-      line(wrapped, MARGIN, 'italic');
+    const wrapped = `NOTES: ${notes}`;
+    for (const seg of wrapText(wrapped, fullCols)) {
+      line(seg, MARGIN, 'italic');
     }
     blankLine();
   }

@@ -146,6 +146,69 @@ body {
   outline-offset: 1px;
 }
 
+/* ---------- logo picker ---------- */
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.logo-choose {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  padding: 8px 14px;
+  font-size: 13px;
+  margin-bottom: 0;
+}
+.logo-choose input[type='file'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.logo-thumb {
+  height: 40px;
+  max-width: 140px;
+  object-fit: contain;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 0 / 12px 12px;
+  padding: 3px;
+}
+.logo-pos {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.logo-pos-label {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.chip {
+  font: inherit;
+  font-size: 12.5px;
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #f7f5ef;
+  color: var(--ink);
+  cursor: pointer;
+}
+.chip.active {
+  background: var(--accent);
+  border-color: var(--accent-dark);
+  color: #fff;
+}
+.chip.remove {
+  color: var(--err);
+  border-color: #e3c1c1;
+  background: #fdf7f7;
+}
+.chip:hover:not(.active) {
+  background: #e9e5da;
+}
+
 /* ---------- dropzone ---------- */
 .dropzone {
   margin: 8px 0;
@@ -311,6 +374,26 @@ body {
   text-align: center;
   border: 1px dashed var(--line);
   border-radius: 8px;
+}
+.preview-logo {
+  display: flex;
+  padding: 4px 6px 8px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 8px;
+}
+.preview-logo img {
+  height: 44px;
+  max-width: 140px;
+  object-fit: contain;
+}
+.preview-logo.pos-left {
+  justify-content: flex-start;
+}
+.preview-logo.pos-center {
+  justify-content: center;
+}
+.preview-logo.pos-right {
+  justify-content: flex-end;
 }
 
 /* ---------- footer ---------- */
