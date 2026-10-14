@@ -49,3 +49,15 @@ export function base64FromDataUrl(dataUrl) {
   const i = String(dataUrl || '').indexOf(',');
   return i >= 0 ? dataUrl.slice(i + 1) : '';
 }
+
+/**
+ * Decode base64 to bytes (browser + Node ≥16 both provide global atob()).
+ * Do NOT use Uint8Array.from(b64, charCodeAt) — that encodes the base64
+ * TEXT itself, producing a corrupt image (Pages shows a "?" placeholder).
+ */
+export function base64ToUint8(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}

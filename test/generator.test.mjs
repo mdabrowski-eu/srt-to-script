@@ -242,6 +242,15 @@ execSync(`cd ${outDir} && unzip -o -q logo.docx word/document.xml`);
 const logoXml = readFileSync(join(outDir, 'word/document.xml'), 'utf8');
 const unzipList = execSync(`cd ${outDir} && unzip -l logo.docx`, { encoding: 'utf8' });
 strict.ok(/word\/media\/.+\.png/i.test(unzipList), 'DOCX embeds logo media file');
+
+// the embedded media must be DECODED image bytes, not the base64 text
+// (regression: Pages showed "?" placeholder when we embedded raw base64 text)
+const mediaName = unzipList.match(/word\/media\/(\S+\.png)/i)[1];
+const mediaBytes = execSync(`cd ${outDir} && unzip -p logo.docx word/media/${mediaName} | head -c 8 | xxd -p`, {
+  encoding: 'utf8',
+  shell: '/bin/bash',
+}).trim();
+strict.equal(mediaBytes, '89504e470d0a1a0a', `embedded media is a real PNG (got ${mediaBytes})`);
 strict.ok(logoXml.includes('<pic:pic') || logoXml.includes('<w:drawing>'), 'DOCX has image XML');
 // center position → jc=center in the logo paragraph
 strict.ok(/<w:jc w:val="center"\/>/, 'DOCX logo paragraph centered');

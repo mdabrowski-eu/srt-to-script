@@ -19,7 +19,7 @@ import {
   Footer,
 } from 'docx';
 import { splitHeaderLines } from './parser.js';
-import { fitLogoBox, base64FromDataUrl, imageTypeFromDataUrl } from './image.js';
+import { fitLogoBox, base64FromDataUrl, base64ToUint8, imageTypeFromDataUrl } from './image.js';
 
 const FONT = 'Courier New';
 const PAGE_W_TWIP = 12240; // Letter 8.5"
@@ -100,7 +100,6 @@ function blank() {
  * and the image sits above the divider line in the header block.
  */
 function logoParagraph(dataUrl, naturalW, naturalH, position) {
-  void base64FromDataUrl;
   const { w, h } = fitLogoBox(naturalW, naturalH);
   const alignment =
     position === 'right' ? AlignmentType.RIGHT : position === 'center' ? AlignmentType.CENTER : AlignmentType.LEFT;
@@ -110,7 +109,7 @@ function logoParagraph(dataUrl, naturalW, naturalH, position) {
     children: [
       new ImageRun({
         type: imageTypeFromDataUrl(dataUrl) || 'png',
-        data: Uint8Array.from(base64FromDataUrl(dataUrl), (c) => c.charCodeAt(0)),
+        data: base64ToUint8(base64FromDataUrl(dataUrl)), // DECODED image bytes (not the base64 text!)
         transformation: {
           width: Math.round(w * 96), // docx ImageRun uses px (96/in)
           height: Math.round(h * 96),
