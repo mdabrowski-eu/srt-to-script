@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "node test/parser.test.mjs && node test/generator.test.mjs",
+    "e2e": "npm run build && npx vite preview --port 4173 & PID=$!; for i in $(seq 1 30); do curl -sf http://localhost:4173/ >/dev/null && break; sleep 1; done; node test/e2e.test.mjs; EXIT=$?; kill $PID 2>/dev/null; exit $EXIT",
+    "e2e:local": "node test/e2e.test.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"

@@ -12,9 +12,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright-core';
+import { resolveChromium } from './chromium.mjs';
 
-const CHROMIUM =
-  '/Users/michalda/Library/Caches/ms-playwright/chromium-1234/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
+const CHROMIUM = resolveChromium();
 const URL = process.env.E2E_URL || 'http://localhost:4173/';
 
 const outDir = mkdtempSync(join(tmpdir(), 'srt-e2e-'));

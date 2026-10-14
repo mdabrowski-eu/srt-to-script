@@ -2,7 +2,7 @@ import { strict } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { parseSrt, buildScriptText } from '../src/parser.js';
 
-const sample = readFileSync(new URL('../../rozczarowani-scenka.srt', import.meta.url), 'utf8');
+const sample = readFileSync(new URL('./fixtures/sample.srt', import.meta.url), 'utf8');
 const parsed = parseSrt(sample);
 
 // --- structure -------------------------------------------------------------

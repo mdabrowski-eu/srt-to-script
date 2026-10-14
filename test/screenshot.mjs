@@ -1,11 +1,11 @@
 /** Capture EN + PL screenshots of the app for visual verification. */
 import { chromium } from 'playwright-core';
+import { resolveChromium } from './chromium.mjs';
 import { mkdirSync } from 'node:fs';
 
-const CHROMIUM =
-  '/Users/michalda/Library/Caches/ms-playwright/chromium-1234/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
-const URL = 'http://localhost:4173/';
-const OUT = '/tmp/i18n-shots';
+const CHROMIUM = resolveChromium();
+const URL = process.env.E2E_URL || 'http://localhost:4173/';
+const OUT = process.env.SHOTS_DIR || '/tmp/i18n-shots';
 mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch({ executablePath: CHROMIUM, headless: true });
