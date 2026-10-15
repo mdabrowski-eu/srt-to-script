@@ -90,9 +90,16 @@ const txtLeft = buildScriptText({ header: {}, parsed, template: 'left' });
 strict.match(txtLeft, /^\[00:00:00\]\nLucy\nOkay watch/m, 'left template: name+dialogue flush left');
 strict.ok(!txtLeft.split('\n')[1].startsWith(' '), 'left template: name has no centering pad');
 
-// --- compact template: no timestamps, no blank lines between blocks ------------
-const txtCompact = buildScriptText({ header: {}, parsed, template: 'compact' });
-strict.ok(!txtCompact.includes('[00:00:00]'), 'compact: no timestamps');
+// --- compact modifier: no timestamps, no blank lines between blocks ------------
+// legacy normalization: template:'compact' => theatre + compact modifier
+const txtLegacy = buildScriptText({ header: {}, parsed, template: 'compact' });
+strict.ok(!txtLegacy.includes('[00:00:00]'), 'legacy template:compact normalized (no timestamps)');
+const cmLegacy = txtLegacy.split('\n').find((l) => l.trim() === 'Lucy');
+strict.ok(cmLegacy && cmLegacy.startsWith(' '.repeat(20)), 'legacy compact: names centered');
+
+// compact + theatre (explicit): timestamps stripped, alignment unchanged
+const txtCompact = buildScriptText({ header: {}, parsed, compact: true });
+strict.ok(!txtCompact.includes('[00:00:00]'), 'compact modifier: no timestamps');
 const bodyLines = txtCompact.split('\n');
 // in compact, an empty line is allowed only right before footer labels
 // (NOTES:/CHARACTERS:) — never between body blocks (dialogue → next name)
@@ -110,6 +117,13 @@ const cmpl = bodyLines.find((l) => l.trim() === 'Lucy');
 strict.ok(cmpl && cmpl.startsWith(' '.repeat(20)), 'compact: name stays centered');
 // NOTES/CHARACTERS footer still present
 strict.ok(txtCompact.includes('CHARACTERS:'), 'compact: characters footer kept');
+
+// compact + left: timestamps stripped AND flush-left alignment preserved
+const txtCLeft = buildScriptText({ header: {}, parsed, template: 'left', compact: true });
+strict.ok(!txtCLeft.includes('[00:00:00]'), 'compact+left: no timestamps');
+strict.match(txtCLeft, /^Lucy\nOkay watch/m, 'compact+left: name+dialogue flush left');
+const clm = txtCLeft.split('\n').find((l) => l.trim() === 'Lucy');
+strict.ok(clm && !clm.startsWith(' '), 'compact+left: name not centered');
 strict.ok(txt.includes('CHARACTERS: Lucy, Demon, Bean'));
 
 // --- header lines handling ---------------------------------------------------

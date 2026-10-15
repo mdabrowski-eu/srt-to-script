@@ -38,6 +38,7 @@ function App() {
   });
   const [logo, setLogo] = useState(null); // { dataUrl, naturalW, naturalH, position }
   const [template, setTemplate] = useState('theatre'); // 'theatre' | 'left'
+  const [compact, setCompact] = useState(false); // modifier: strip timestamps + spacing
   const [srtText, setSrtText] = useState('');
   const [fileName, setFileName] = useState('');
   const [status, setStatus] = useState(null); // { kind: 'ok'|'error', msg }
@@ -123,8 +124,8 @@ function App() {
 
   const preview = useMemo(() => {
     if (!parsed) return '';
-    return buildScriptText({ header, parsed, template });
-  }, [header, parsed, template]);
+    return buildScriptText({ header, parsed, template, compact });
+  }, [header, parsed, template, compact]);
 
   const generate = async (kind) => {
     if (!parsed) {
@@ -136,11 +137,11 @@ function App() {
     try {
       const headerWithLogo = { ...header, logo };
       if (kind === 'docx') {
-        const blob = await buildDocxBlob({ header: headerWithLogo, parsed, template });
+        const blob = await buildDocxBlob({ header: headerWithLogo, parsed, template, compact });
         downloadBlob(blob, `${baseName}.docx`);
         setStatus({ kind: 'ok', msg: t('dlOne', { file: `${baseName}.docx` }) });
       } else {
-        const blob = await buildPdfBlob({ header: headerWithLogo, parsed, template });
+        const blob = await buildPdfBlob({ header: headerWithLogo, parsed, template, compact });
         downloadBlob(blob, `${baseName}.pdf`);
         setStatus({ kind: 'ok', msg: t('dlOne', { file: `${baseName}.pdf` }) });
       }
@@ -161,10 +162,10 @@ function App() {
     setStatus(null);
     try {
       const headerWithLogo = { ...header, logo };
-      const docxBlob = await buildDocxBlob({ header: headerWithLogo, parsed, template });
+      const docxBlob = await buildDocxBlob({ header: headerWithLogo, parsed, template, compact });
       downloadBlob(docxBlob, `${baseName}.docx`);
       await new Promise((r) => setTimeout(r, 400));
-      const pdfBlob = await buildPdfBlob({ header: headerWithLogo, parsed, template });
+      const pdfBlob = await buildPdfBlob({ header: headerWithLogo, parsed, template, compact });
       downloadBlob(pdfBlob, `${baseName}.pdf`);
       setStatus({
         kind: 'ok',
@@ -289,15 +290,14 @@ function App() {
               >
                 {t('tplLeft')}
               </button>
-              <button
-                type="button"
-                className={`chip tpl-chip ${template === 'compact' ? 'active' : ''}`}
-                onClick={() => setTemplate('compact')}
-                aria-pressed={template === 'compact'}
-                title={t('tplCompactHint')}
-              >
-                {t('tplCompact')}
-              </button>
+              <label className="compact-toggle" title={t('compactHint')}>
+                <input
+                  type="checkbox"
+                  checked={compact}
+                  onChange={(e) => setCompact(e.target.checked)}
+                />
+                <span>{t('compactLabel')}</span>
+              </label>
             </div>
           </label>
 

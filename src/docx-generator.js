@@ -18,7 +18,7 @@ import {
   PageNumber,
   Footer,
 } from 'docx';
-import { splitHeaderLines } from './parser.js';
+import { splitHeaderLines, resolveLayout } from './parser.js';
 import { fitLogoBox, base64FromDataUrl, base64ToUint8, imageTypeFromDataUrl } from './image.js';
 
 const FONT = 'Courier New';
@@ -150,17 +150,16 @@ function turnParagraphs(turn, template) {
 }
 
 /**
- * Body block loop per template family:
- * - timestamps skipped in 'compact'; blank separator line between blocks
- *   skipped in 'compact'
+ * Body block loop: timestamps + blank separator line only when not compact.
+ * Alignment comes from the template (turnParagraphs).
  */
-function blockParagraphs(b, template) {
+function blockParagraphs(b, template, compact) {
   const out = [];
-  if (template !== 'compact') out.push(timestampParagraph(b.timestamp));
+  if (!compact) out.push(timestampParagraph(b.timestamp));
   for (const t of b.turns) {
     out.push(...turnParagraphs(t, template));
   }
-  if (template !== 'compact') out.push(blank());
+  if (!compact) out.push(blank());
   return out;
 }
 
@@ -168,9 +167,11 @@ function blockParagraphs(b, template) {
  * Build the DOCX Document from parsed blocks + form header.
  * Returns a Blob in the browser (Buffer-compatible in Node).
  */
-export function buildDocxBlob({ header = {}, parsed, template = 'theatre' }) {
+export function buildDocxBlob({ header = {}, parsed, template = 'theatre', compact = false }) {
   const { headerText = '', notes = '', logo = null } = header;
   const { blocks, characters } = parsed;
+  const layout = resolveLayout({ template, compact });
+  const alignTemplate = layout.allLeft ? 'left' : 'theatre';
 
   const children = [];
 
@@ -190,7 +191,7 @@ export function buildDocxBlob({ header = {}, parsed, template = 'theatre' }) {
 
   // ---- body ----
   for (const b of blocks) {
-    children.push(...blockParagraphs(b, template));
+    children.push(...blockParagraphs(b, alignTemplate, layout.compact));
   }
 
   // ---- footer section: left-aligned at the margin ----

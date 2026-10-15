@@ -163,13 +163,24 @@ await page.click('.chip.remove');
 await page.waitForSelector('.preview-logo', { state: 'detached' });
 strict.ok(!(await page.isVisible('.logo-thumb')), 'logo removed from UI');
 
-// ---- template switch (theatre ⇄ all-left ⇄ compact) -------------------------
+// ---- template chips + compact modifier toggle -------------------------------
 await page.click('.tpl-chip:has-text("All left")');
 await page.waitForFunction(
   () => document.querySelector('.script-preview')?.textContent.includes('\nLucy\n')
 );
 strict.ok(true, 'left template: preview name flush left');
-// switch back to theatre — name centered again
+// compact modifier on top of 'left': timestamps disappear, alignment kept
+const compactBox = page.locator('.compact-toggle input[type=checkbox]');
+await compactBox.check();
+await page.waitForFunction(
+  () => {
+    const txt = document.querySelector('.script-preview')?.textContent || '';
+    return !txt.includes('[00:00:00]') && txt.includes('Lucy');
+  },
+  { timeout: 5000 }
+);
+strict.ok(true, 'compact+left: timestamps stripped from preview');
+// switch template under compact ON — alignment flips, timestamps stay stripped
 await page.click('.tpl-chip:has-text("Theatre")');
 await page.waitForFunction(
   () => {
@@ -181,20 +192,14 @@ await page.waitForFunction(
   },
   { timeout: 5000 }
 );
-strict.ok(true, 'theatre template restored: name centered in preview');
-// compact: no timestamps, no blank gaps between body lines
-await page.click('.tpl-chip:has-text("Compact")');
+strict.ok(true, 'compact+theatre: names centered while compact stays on');
+// compact OFF → timestamps return
+await compactBox.uncheck();
 await page.waitForFunction(
-  () => {
-    const txt = document.querySelector('.script-preview')?.textContent || '';
-    return !txt.includes('[00:00:00]') && txt.includes('Lucy');
-  },
+  () => (document.querySelector('.script-preview')?.textContent || '').includes('[00:00:00]'),
   { timeout: 5000 }
 );
-const compactPreview = await page.textContent('.script-preview');
-strict.ok(!compactPreview.includes('[00:00:'), 'compact template: timestamps removed from preview');
-strict.ok(compactPreview.includes('CHARACTERS:'), 'compact template: footer kept');
-await page.click('.tpl-chip:has-text("Theatre")');
+strict.ok(true, 'compact off: timestamps restored in preview');
 await page.setViewportSize({ width: 1280, height: 900 });
 await page.screenshot({ path: join(outDir, 'app.png'), fullPage: true });
 console.log('screenshot:', join(outDir, 'app.png'));

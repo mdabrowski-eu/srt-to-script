@@ -15,7 +15,7 @@ import {
   CourierPrime_Italic,
   CourierPrime_BoldItalic,
 } from './fonts.js';
-import { splitHeaderLines, wrapText } from './parser.js';
+import { splitHeaderLines, wrapText, resolveLayout } from './parser.js';
 import { fitLogoBox, imageXIn, LOGO_MAX_H_IN } from './image.js';
 
 const PT_PER_IN = 72;
@@ -75,11 +75,12 @@ function calibrateMonospace(doc) {
 /**
  * Build the PDF (US Letter). Returns the jsPDF instance (.output('blob') etc.).
  */
-export function buildPdfDoc({ header = {}, parsed, template = 'theatre' }) {
+export function buildPdfDoc({ header = {}, parsed, template = 'theatre', compact = false }) {
   const { headerText = '', notes = '', logo = null } = header;
   const { blocks, characters } = parsed;
-  const allLeft = template === 'left';
-  const compact = template === 'compact';
+  const layout = resolveLayout({ template, compact });
+  const allLeft = layout.allLeft;
+  const compactOn = layout.compact;
 
   const doc = new jsPDF({ unit: 'pt', format: 'letter', orientation: 'portrait' });
   registerFonts(doc);
@@ -161,7 +162,7 @@ export function buildPdfDoc({ header = {}, parsed, template = 'theatre' }) {
 
   // ---- body ----
   for (const b of blocks) {
-    if (!compact) line(`[${b.timestamp}]`, MARGIN);
+    if (!compactOn) line(`[${b.timestamp}]`, MARGIN);
     for (const t of b.turns) {
       if (t.name) {
         // names are short; still guard against overflow via wrap
@@ -183,7 +184,7 @@ export function buildPdfDoc({ header = {}, parsed, template = 'theatre' }) {
         }
       }
     }
-    if (!compact) blankLine();
+    if (!compactOn) blankLine();
   }
 
   // ---- footer section: left-aligned at the margin, full-width wrap ----

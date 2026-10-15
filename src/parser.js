@@ -211,11 +211,21 @@ export function splitHeaderLines(headerText) {
     .filter(Boolean);
 }
 
-export function buildScriptText({ header = {}, parsed, template = 'theatre' }) {
+/**
+ * Layout resolution shared by all renderers (preview, DOCX, PDF):
+ * - template decides alignment: 'theatre' (default) | 'left'
+ * - `compact` is a modifier: strip timestamps + blank lines between blocks
+ * Legacy call sites passing template:'compact' normalize to theatre+compact.
+ */
+export function resolveLayout({ template = 'theatre', compact = false } = {}) {
+  if (template === 'compact') return { allLeft: false, compact: true };
+  return { allLeft: template === 'left', compact: Boolean(compact) };
+}
+
+export function buildScriptText({ header = {}, parsed, template = 'theatre', compact: compactOpt = false }) {
   const { headerText = '', notes = '' } = header;
   const { blocks, characters } = parsed;
-  const allLeft = template === 'left';
-  const compact = template === 'compact';
+  const { allLeft, compact } = resolveLayout({ template, compact: compactOpt });
 
   const lines = [];
   const headerLines = splitHeaderLines(headerText);

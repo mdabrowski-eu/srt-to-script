@@ -211,12 +211,31 @@ body {
 .template-row {
   display: inline-flex;
   gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 .tpl-chip {
   padding: 6px 16px;
   font-size: 13px;
 }
-/* hint tooltip chip styling is carried by title attribute */
+.compact-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b4740;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 0;
+}
+.compact-toggle input {
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+/* hint carried via title attribute */
 
 /* ---------- dropzone ---------- */
 .dropzone {
