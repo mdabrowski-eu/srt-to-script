@@ -37,6 +37,7 @@ function App() {
     notes: '',
   });
   const [logo, setLogo] = useState(null); // { dataUrl, naturalW, naturalH, position }
+  const [template, setTemplate] = useState('theatre'); // 'theatre' | 'left'
   const [srtText, setSrtText] = useState('');
   const [fileName, setFileName] = useState('');
   const [status, setStatus] = useState(null); // { kind: 'ok'|'error', msg }
@@ -122,8 +123,8 @@ function App() {
 
   const preview = useMemo(() => {
     if (!parsed) return '';
-    return buildScriptText({ header, parsed });
-  }, [header, parsed]);
+    return buildScriptText({ header, parsed, template });
+  }, [header, parsed, template]);
 
   const generate = async (kind) => {
     if (!parsed) {
@@ -135,11 +136,11 @@ function App() {
     try {
       const headerWithLogo = { ...header, logo };
       if (kind === 'docx') {
-        const blob = await buildDocxBlob({ header: headerWithLogo, parsed });
+        const blob = await buildDocxBlob({ header: headerWithLogo, parsed, template });
         downloadBlob(blob, `${baseName}.docx`);
         setStatus({ kind: 'ok', msg: t('dlOne', { file: `${baseName}.docx` }) });
       } else {
-        const blob = await buildPdfBlob({ header: headerWithLogo, parsed });
+        const blob = await buildPdfBlob({ header: headerWithLogo, parsed, template });
         downloadBlob(blob, `${baseName}.pdf`);
         setStatus({ kind: 'ok', msg: t('dlOne', { file: `${baseName}.pdf` }) });
       }
@@ -160,10 +161,10 @@ function App() {
     setStatus(null);
     try {
       const headerWithLogo = { ...header, logo };
-      const docxBlob = await buildDocxBlob({ header: headerWithLogo, parsed });
+      const docxBlob = await buildDocxBlob({ header: headerWithLogo, parsed, template });
       downloadBlob(docxBlob, `${baseName}.docx`);
       await new Promise((r) => setTimeout(r, 400));
-      const pdfBlob = await buildPdfBlob({ header: headerWithLogo, parsed });
+      const pdfBlob = await buildPdfBlob({ header: headerWithLogo, parsed, template });
       downloadBlob(pdfBlob, `${baseName}.pdf`);
       setStatus({
         kind: 'ok',
@@ -264,6 +265,30 @@ function App() {
               ) : (
                 <span className="logo-none">{t('logoNone')}</span>
               )}
+            </div>
+          </label>
+
+          <label className="field-label">
+            {t('templateLabel')}
+            <div className="template-row" role="radiogroup" aria-label={t('templateLabel')}>
+              <button
+                type="button"
+                className={`chip tpl-chip ${template === 'theatre' ? 'active' : ''}`}
+                onClick={() => setTemplate('theatre')}
+                aria-pressed={template === 'theatre'}
+                title={t('tplTheatreHint')}
+              >
+                {t('tplTheatre')}
+              </button>
+              <button
+                type="button"
+                className={`chip tpl-chip ${template === 'left' ? 'active' : ''}`}
+                onClick={() => setTemplate('left')}
+                aria-pressed={template === 'left'}
+                title={t('tplLeftHint')}
+              >
+                {t('tplLeft')}
+              </button>
             </div>
           </label>
 

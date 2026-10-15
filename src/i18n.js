@@ -34,6 +34,12 @@ const DICT = {
     logoPosRight: 'Right',
     logoRemove: '✕ Remove',
 
+    templateLabel: 'Script template',
+    tplTheatre: 'Theatre',
+    tplTheatreHint: 'character names centered, dialogue indented',
+    tplLeft: 'All left',
+    tplLeftHint: 'everything below the header aligned left',
+
     step2: '2 · Subtitles (SRT)',
     dropDrop: 'Drop an .srt file here',
     dropChoose: ' or click to choose',
@@ -101,6 +107,12 @@ const DICT = {
     logoPosCenter: 'Środek',
     logoPosRight: 'Prawo',
     logoRemove: '✕ Usuń',
+
+    templateLabel: 'Układ scenariusza',
+    tplTheatre: 'Sceniczny',
+    tplTheatreHint: 'imiona wyśrodkowane, dialogi z wcięciem',
+    tplLeft: 'Wyrównane do lewej',
+    tplLeftHint: 'wszystko pod nagłówkiem wyrównane do lewej',
 
     step2: '2 · Napisy (SRT)',
     dropDrop: 'Przeciągnij tutaj plik .srt',

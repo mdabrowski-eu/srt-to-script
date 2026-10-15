@@ -75,9 +75,10 @@ function calibrateMonospace(doc) {
 /**
  * Build the PDF (US Letter). Returns the jsPDF instance (.output('blob') etc.).
  */
-export function buildPdfDoc({ header = {}, parsed }) {
+export function buildPdfDoc({ header = {}, parsed, template = 'theatre' }) {
   const { headerText = '', notes = '', logo = null } = header;
   const { blocks, characters } = parsed;
+  const allLeft = template === 'left';
 
   const doc = new jsPDF({ unit: 'pt', format: 'letter', orientation: 'portrait' });
   registerFonts(doc);
@@ -163,13 +164,20 @@ export function buildPdfDoc({ header = {}, parsed }) {
     for (const t of b.turns) {
       if (t.name) {
         // names are short; still guard against overflow via wrap
-        for (const seg of wrapText(t.name, fullCols)) {
-          line(seg, centerX(seg.length), 'bold');
+        if (allLeft) {
+          for (const seg of wrapText(t.name, fullCols)) {
+            line(seg, MARGIN, 'bold');
+          }
+        } else {
+          for (const seg of wrapText(t.name, fullCols)) {
+            line(seg, centerX(seg.length), 'bold');
+          }
         }
       }
       if (t.text) {
-        const indentX = MARGIN + DIALOGUE_INDENT_CHARS * charW;
-        for (const wrapped of wrapText(t.text, bodyCols)) {
+        const indentX = allLeft ? MARGIN : MARGIN + DIALOGUE_INDENT_CHARS * charW;
+        const width = allLeft ? fullCols : bodyCols;
+        for (const wrapped of wrapText(t.text, width)) {
           line(wrapped, indentX);
         }
       }

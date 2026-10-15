@@ -256,4 +256,43 @@ strict.ok(logoXml.includes('<pic:pic') || logoXml.includes('<w:drawing>'), 'DOCX
 strict.ok(/<w:jc w:val="center"\/>/, 'DOCX logo paragraph centered');
 console.log('✓ DOCX logo embed OK');
 
+// ---- 'left' template regression (DOCX + PDF) ------------------------------
+const leftHeader = { headerText: 'H' };
+const leftDocxBlob = await buildDocxBlob({ header: leftHeader, parsed, template: 'left' });
+const leftDocxPath = join(outDir, 'left.docx');
+writeFileSync(leftDocxPath, Buffer.from(await leftDocxBlob.arrayBuffer()));
+execSync(`cd ${outDir} && unzip -o -q left.docx word/document.xml`);
+const leftXml = readFileSync(join(outDir, 'word/document.xml'), 'utf8');
+const leftLucy = leftXml.match(/<w:p\b[^>]*>(?:(?!<\/w:p>).)*?Lucy(?:(?!<\/w:p>).)*?<\/w:p>/s);
+strict.ok(leftLucy, 'left DOCX: Lucy paragraph found');
+strict.ok(!/w:ind\b/.test(leftLucy[0]), 'left DOCX: name not indented (flush left)');
+const leftDial = leftXml.match(/<w:p\b[^>]*>(?:(?!<\/w:p>).)*?Okay watch(?:(?!<\/w:p>).)*?<\/w:p>/s);
+strict.ok(leftDial, 'left DOCX: dialogue paragraph found');
+strict.ok(!/w:ind\b/.test(leftDial[0]), 'left DOCX: dialogue not indented (flush left)');
+// header still centered in left template
+strict.ok(/<w:jc w:val="center"\/>/.test(leftXml), 'left DOCX: header lines still centered');
+
+const leftPdfDoc = buildPdfDoc({ header: leftHeader, parsed, template: 'left' });
+const leftPdfPath = join(outDir, 'left.pdf');
+writeFileSync(leftPdfPath, Buffer.from(leftPdfDoc.output('arraybuffer')));
+if (hasPdftotext) {
+  const leftTxt = execSync(`pdftotext -layout ${leftPdfPath} - 2>/dev/null`, {
+    encoding: 'utf8',
+    shell: '/bin/bash',
+  });
+  const lucyLine = leftTxt.split('\n').find((l) => l.trim() === 'Lucy');
+  strict.ok(lucyLine !== undefined && lucyLine.startsWith('Lucy'), 'left PDF: name flush left');
+  const dialLine = leftTxt.split('\n').find((l) => l.includes('Okay watch'));
+  strict.ok(dialLine && dialLine.trimStart() === dialLine, 'left PDF: dialogue flush left');
+  execSync(`pdftotext -bbox ${leftPdfPath} ${join(outDir, 'left-bbox.html')}`);
+  const lBbox = readFileSync(join(outDir, 'left-bbox.html'), 'utf8');
+  // Lucy body name at margin: its xMin should be ~54pt (margin)
+  const lucyWords = [...lBbox.matchAll(/<word xMin="([\d.]+)"[^>]*>Lucy<\/word>/g)].map((m) => Number(m[1]));
+  strict.ok(lucyWords.some((x) => Math.abs(x - 54) < 2), `left PDF: Lucy at margin (x=${lucyWords.join(',')})`);
+  // dialogue starts at margin too (no indent in left template)
+  const okayX = [...lBbox.matchAll(/<word xMin="([\d.]+)"[^>]*>Okay<\/word>/g)].map((m) => Number(m[1]));
+  strict.ok(okayX.some((x) => Math.abs(x - 54) < 2), `left PDF: 'Okay' at margin (got ${okayX})`);
+}
+console.log('✓ left template OK (DOCX + PDF)');
+
 console.log('files:', outDir, '/test.docx, /test.pdf');

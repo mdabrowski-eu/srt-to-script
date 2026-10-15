@@ -163,7 +163,25 @@ await page.click('.chip.remove');
 await page.waitForSelector('.preview-logo', { state: 'detached' });
 strict.ok(!(await page.isVisible('.logo-thumb')), 'logo removed from UI');
 
-// ---- screenshot of the app UI -------------------------------------------------
+// ---- template switch (theatre ⇄ all-left) -----------------------------------
+await page.click('.tpl-chip:has-text("All left")');
+await page.waitForFunction(
+  () => document.querySelector('.script-preview')?.textContent.includes('\nLucy\n')
+);
+strict.ok(true, 'left template: preview name flush left');
+// switch back to theatre — name centered again
+await page.click('.tpl-chip:has-text("Theatre")');
+await page.waitForFunction(
+  () => {
+    const l = document
+      .querySelector('.script-preview')
+      ?.textContent.split('\n')
+      .find((x) => x.trim() === 'Lucy');
+    return l && l.startsWith('    ') && l.trim() === 'Lucy';
+  },
+  { timeout: 5000 }
+);
+strict.ok(true, 'theatre template restored: name centered in preview');
 await page.setViewportSize({ width: 1280, height: 900 });
 await page.screenshot({ path: join(outDir, 'app.png'), fullPage: true });
 console.log('screenshot:', join(outDir, 'app.png'));

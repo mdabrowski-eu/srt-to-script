@@ -28,7 +28,10 @@ In the app:
 3. Optionally add a **logo image** (PNG/JPG/WebP/GIF/BMP) shown above the header block —
    choose its position: left, center or right. The image is scaled to fit
    (max 2.5″ × 1.25″, never upscaled) and the live preview mirrors the placement.
-4. Click **Download DOCX + PDF** (or either format alone). Filenames are derived from the first
+4. Choose the **script template**:
+   - **Theatre** (default) — character names centered, dialogue indented 0.5″
+   - **All left** — everything below the header (timestamps, names, dialogue) flush left
+5. Click **Download DOCX + PDF** (or either format alone). Filenames are derived from the first
    header line (or the uploaded file name), slugified safely.
 
 ## Input structure
@@ -64,8 +67,9 @@ Processing rules:
   (scaled to max 2.5″ × 1.25″, aspect ratio preserved, small images never upscaled).
 - Header block from the form (one centered line per text box row, between drawn divider lines).
 - `[hh:mm:ss]` start timestamp, left-aligned.
-- Character name, centered, bold.
-- Dialogue, left-aligned but indented (~0.5"), wrapped to the page.
+- Character name — **centered, bold** in the Theatre template, **flush left** in the All-left
+  template.
+- Dialogue — left-aligned; indented ~0.5″ in the Theatre template, flush left in All-left.
 - Blank line between blocks; production notes (**NOTES:**, italic) and a **CHARACTERS:** list
   at the bottom — both left-aligned at the margin.
 - Drawn horizontal divider lines around the header (full text-column width, not `===` glyphs).

@@ -84,6 +84,11 @@ const txt = buildScriptText({
 });
 strict.match(txt, /\u2500{70}\n {29}Rozczarowani\n {31}Scenka 1\n\u2500{70}/m, 'header block rendered');
 strict.match(txt, /^\[00:00:00\]\n {33}Lucy\n {5}Okay watch/m, 'layout prefix');
+
+// --- left template: names + dialogue flush left --------------------------------
+const txtLeft = buildScriptText({ header: {}, parsed, template: 'left' });
+strict.match(txtLeft, /^\[00:00:00\]\nLucy\nOkay watch/m, 'left template: name+dialogue flush left');
+strict.ok(!txtLeft.split('\n')[1].startsWith(' '), 'left template: name has no centering pad');
 strict.ok(txt.includes('CHARACTERS: Lucy, Demon, Bean'));
 
 // --- header lines handling ---------------------------------------------------

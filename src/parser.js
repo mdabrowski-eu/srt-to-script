@@ -211,9 +211,10 @@ export function splitHeaderLines(headerText) {
     .filter(Boolean);
 }
 
-export function buildScriptText({ header = {}, parsed }) {
+export function buildScriptText({ header = {}, parsed, template = 'theatre' }) {
   const { headerText = '', notes = '' } = header;
   const { blocks, characters } = parsed;
+  const allLeft = template === 'left';
 
   const lines = [];
   const headerLines = splitHeaderLines(headerText);
@@ -232,13 +233,14 @@ export function buildScriptText({ header = {}, parsed }) {
     lines.push(`[${b.timestamp}]`);
     for (const t of b.turns) {
       if (t.name) {
-        for (const seg of wrapText(t.name, HEADER_COLS)) {
-          lines.push(centerPad(seg.length) + seg);
+        const nameSegs = wrapText(t.name, HEADER_COLS);
+        for (const seg of nameSegs) {
+          lines.push(allLeft ? seg : centerPad(seg.length) + seg);
         }
       }
       if (t.text) {
         for (const seg of wrapText(t.text, HEADER_COLS - DIALOGUE_INDENT.length)) {
-          lines.push(DIALOGUE_INDENT + seg);
+          lines.push(allLeft ? seg : DIALOGUE_INDENT + seg);
         }
       }
     }

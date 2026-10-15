@@ -120,10 +120,40 @@ function logoParagraph(dataUrl, naturalW, naturalH, position) {
 }
 
 /**
+ * Body turns per template:
+ * - 'theatre': name centered (indent), dialogue indented 0.5"
+ * - 'left':    everything flush left (timestamps stay left in both)
+ */
+function turnParagraphs(turn, template) {
+  const out = [];
+  if (turn.name) {
+    if (template === 'left') {
+      out.push(new Paragraph({
+        alignment: AlignmentType.LEFT,
+        children: [new TextRun({ text: turn.name, font: FONT, size: SIZE, bold: true })],
+      }));
+    } else {
+      out.push(nameParagraph(turn.name));
+    }
+  }
+  if (turn.text) {
+    if (template === 'left') {
+      out.push(new Paragraph({
+        alignment: AlignmentType.LEFT,
+        children: [new TextRun({ text: turn.text, font: FONT, size: SIZE })],
+      }));
+    } else {
+      out.push(dialogueParagraph(turn.text));
+    }
+  }
+  return out;
+}
+
+/**
  * Build the DOCX Document from parsed blocks + form header.
  * Returns a Blob in the browser (Buffer-compatible in Node).
  */
-export function buildDocxBlob({ header = {}, parsed }) {
+export function buildDocxBlob({ header = {}, parsed, template = 'theatre' }) {
   const { headerText = '', notes = '', logo = null } = header;
   const { blocks, characters } = parsed;
 
@@ -147,8 +177,7 @@ export function buildDocxBlob({ header = {}, parsed }) {
   for (const b of blocks) {
     children.push(timestampParagraph(b.timestamp));
     for (const t of b.turns) {
-      if (t.name) children.push(nameParagraph(t.name));
-      if (t.text) children.push(dialogueParagraph(t.text));
+      children.push(...turnParagraphs(t, template));
     }
     children.push(blank());
   }
