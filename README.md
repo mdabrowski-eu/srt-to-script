@@ -31,6 +31,8 @@ In the app:
 4. Choose the **script template**:
    - **Theatre** (default) — character names centered, dialogue indented 0.5″
    - **All left** — everything below the header (timestamps, names, dialogue) flush left
+   - **Compact** — theatre alignment but no timestamps and no blank lines between blocks
+     (densest layout, for read-through rehearsal)
 5. Click **Download DOCX + PDF** (or either format alone). Filenames are derived from the first
    header line (or the uploaded file name), slugified safely.
 

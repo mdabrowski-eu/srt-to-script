@@ -163,7 +163,7 @@ await page.click('.chip.remove');
 await page.waitForSelector('.preview-logo', { state: 'detached' });
 strict.ok(!(await page.isVisible('.logo-thumb')), 'logo removed from UI');
 
-// ---- template switch (theatre ⇄ all-left) -----------------------------------
+// ---- template switch (theatre ⇄ all-left ⇄ compact) -------------------------
 await page.click('.tpl-chip:has-text("All left")');
 await page.waitForFunction(
   () => document.querySelector('.script-preview')?.textContent.includes('\nLucy\n')
@@ -182,6 +182,19 @@ await page.waitForFunction(
   { timeout: 5000 }
 );
 strict.ok(true, 'theatre template restored: name centered in preview');
+// compact: no timestamps, no blank gaps between body lines
+await page.click('.tpl-chip:has-text("Compact")');
+await page.waitForFunction(
+  () => {
+    const txt = document.querySelector('.script-preview')?.textContent || '';
+    return !txt.includes('[00:00:00]') && txt.includes('Lucy');
+  },
+  { timeout: 5000 }
+);
+const compactPreview = await page.textContent('.script-preview');
+strict.ok(!compactPreview.includes('[00:00:'), 'compact template: timestamps removed from preview');
+strict.ok(compactPreview.includes('CHARACTERS:'), 'compact template: footer kept');
+await page.click('.tpl-chip:has-text("Theatre")');
 await page.setViewportSize({ width: 1280, height: 900 });
 await page.screenshot({ path: join(outDir, 'app.png'), fullPage: true });
 console.log('screenshot:', join(outDir, 'app.png'));

@@ -39,6 +39,8 @@ const DICT = {
     tplTheatreHint: 'character names centered, dialogue indented',
     tplLeft: 'All left',
     tplLeftHint: 'everything below the header aligned left',
+    tplCompact: 'Compact',
+    tplCompactHint: 'no timestamps, no blank lines between blocks',
 
     step2: '2 · Subtitles (SRT)',
     dropDrop: 'Drop an .srt file here',
@@ -113,6 +115,8 @@ const DICT = {
     tplTheatreHint: 'imiona wyśrodkowane, dialogi z wcięciem',
     tplLeft: 'Wyrównane do lewej',
     tplLeftHint: 'wszystko pod nagłówkiem wyrównane do lewej',
+    tplCompact: 'Kompaktowy',
+    tplCompactHint: 'bez znaczników czasu, bez pustych linii między blokami',
 
     step2: '2 · Napisy (SRT)',
     dropDrop: 'Przeciągnij tutaj plik .srt',

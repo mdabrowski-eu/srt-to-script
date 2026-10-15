@@ -89,6 +89,27 @@ strict.match(txt, /^\[00:00:00\]\n {33}Lucy\n {5}Okay watch/m, 'layout prefix');
 const txtLeft = buildScriptText({ header: {}, parsed, template: 'left' });
 strict.match(txtLeft, /^\[00:00:00\]\nLucy\nOkay watch/m, 'left template: name+dialogue flush left');
 strict.ok(!txtLeft.split('\n')[1].startsWith(' '), 'left template: name has no centering pad');
+
+// --- compact template: no timestamps, no blank lines between blocks ------------
+const txtCompact = buildScriptText({ header: {}, parsed, template: 'compact' });
+strict.ok(!txtCompact.includes('[00:00:00]'), 'compact: no timestamps');
+const bodyLines = txtCompact.split('\n');
+// in compact, an empty line is allowed only right before footer labels
+// (NOTES:/CHARACTERS:) — never between body blocks (dialogue → next name)
+for (let i = 0; i < bodyLines.length; i++) {
+  if (bodyLines[i] === '') {
+    const next = bodyLines[i + 1] || '';
+    strict.ok(
+      next.startsWith('NOTES:') || next.startsWith('CHARACTERS:') || next === '',
+      `compact: blank line only before footer (line ${i}, next="${next.slice(0, 12)}")`
+    );
+  }
+}
+// names still centered (theatre alignment) in compact
+const cmpl = bodyLines.find((l) => l.trim() === 'Lucy');
+strict.ok(cmpl && cmpl.startsWith(' '.repeat(20)), 'compact: name stays centered');
+// NOTES/CHARACTERS footer still present
+strict.ok(txtCompact.includes('CHARACTERS:'), 'compact: characters footer kept');
 strict.ok(txt.includes('CHARACTERS: Lucy, Demon, Bean'));
 
 // --- header lines handling ---------------------------------------------------

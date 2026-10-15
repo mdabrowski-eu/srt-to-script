@@ -150,6 +150,21 @@ function turnParagraphs(turn, template) {
 }
 
 /**
+ * Body block loop per template family:
+ * - timestamps skipped in 'compact'; blank separator line between blocks
+ *   skipped in 'compact'
+ */
+function blockParagraphs(b, template) {
+  const out = [];
+  if (template !== 'compact') out.push(timestampParagraph(b.timestamp));
+  for (const t of b.turns) {
+    out.push(...turnParagraphs(t, template));
+  }
+  if (template !== 'compact') out.push(blank());
+  return out;
+}
+
+/**
  * Build the DOCX Document from parsed blocks + form header.
  * Returns a Blob in the browser (Buffer-compatible in Node).
  */
@@ -175,11 +190,7 @@ export function buildDocxBlob({ header = {}, parsed, template = 'theatre' }) {
 
   // ---- body ----
   for (const b of blocks) {
-    children.push(timestampParagraph(b.timestamp));
-    for (const t of b.turns) {
-      children.push(...turnParagraphs(t, template));
-    }
-    children.push(blank());
+    children.push(...blockParagraphs(b, template));
   }
 
   // ---- footer section: left-aligned at the margin ----

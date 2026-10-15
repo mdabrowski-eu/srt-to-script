@@ -79,6 +79,7 @@ export function buildPdfDoc({ header = {}, parsed, template = 'theatre' }) {
   const { headerText = '', notes = '', logo = null } = header;
   const { blocks, characters } = parsed;
   const allLeft = template === 'left';
+  const compact = template === 'compact';
 
   const doc = new jsPDF({ unit: 'pt', format: 'letter', orientation: 'portrait' });
   registerFonts(doc);
@@ -160,7 +161,7 @@ export function buildPdfDoc({ header = {}, parsed, template = 'theatre' }) {
 
   // ---- body ----
   for (const b of blocks) {
-    line(`[${b.timestamp}]`, MARGIN);
+    if (!compact) line(`[${b.timestamp}]`, MARGIN);
     for (const t of b.turns) {
       if (t.name) {
         // names are short; still guard against overflow via wrap
@@ -182,7 +183,7 @@ export function buildPdfDoc({ header = {}, parsed, template = 'theatre' }) {
         }
       }
     }
-    blankLine();
+    if (!compact) blankLine();
   }
 
   // ---- footer section: left-aligned at the margin, full-width wrap ----

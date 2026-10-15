@@ -215,6 +215,7 @@ export function buildScriptText({ header = {}, parsed, template = 'theatre' }) {
   const { headerText = '', notes = '' } = header;
   const { blocks, characters } = parsed;
   const allLeft = template === 'left';
+  const compact = template === 'compact';
 
   const lines = [];
   const headerLines = splitHeaderLines(headerText);
@@ -230,13 +231,11 @@ export function buildScriptText({ header = {}, parsed, template = 'theatre' }) {
   }
 
   for (const b of blocks) {
-    lines.push(`[${b.timestamp}]`);
+    if (!compact) lines.push(`[${b.timestamp}]`);
     for (const t of b.turns) {
-      if (t.name) {
-        const nameSegs = wrapText(t.name, HEADER_COLS);
-        for (const seg of nameSegs) {
-          lines.push(allLeft ? seg : centerPad(seg.length) + seg);
-        }
+      const nameSegs = wrapText(t.name, HEADER_COLS);
+      for (const seg of nameSegs) {
+        lines.push(allLeft ? seg : centerPad(seg.length) + seg);
       }
       if (t.text) {
         for (const seg of wrapText(t.text, HEADER_COLS - DIALOGUE_INDENT.length)) {
@@ -244,7 +243,7 @@ export function buildScriptText({ header = {}, parsed, template = 'theatre' }) {
         }
       }
     }
-    lines.push('');
+    if (!compact) lines.push('');
   }
 
   if (notes) {

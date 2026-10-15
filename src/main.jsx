@@ -289,6 +289,15 @@ function App() {
               >
                 {t('tplLeft')}
               </button>
+              <button
+                type="button"
+                className={`chip tpl-chip ${template === 'compact' ? 'active' : ''}`}
+                onClick={() => setTemplate('compact')}
+                aria-pressed={template === 'compact'}
+                title={t('tplCompactHint')}
+              >
+                {t('tplCompact')}
+              </button>
             </div>
           </label>
 

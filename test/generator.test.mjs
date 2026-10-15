@@ -295,4 +295,69 @@ if (hasPdftotext) {
 }
 console.log('✓ left template OK (DOCX + PDF)');
 
+// ---- 'compact' template regression (DOCX + PDF) ----------------------------
+const compactHeader = { headerText: 'H' };
+const compactDocxBlob = await buildDocxBlob({ header: compactHeader, parsed, template: 'compact' });
+const compactDocxPath = join(outDir, 'compact.docx');
+writeFileSync(compactDocxPath, Buffer.from(await compactDocxBlob.arrayBuffer()));
+execSync(`cd ${outDir} && unzip -o -q compact.docx word/document.xml`);
+const compactXml = readFileSync(join(outDir, 'word/document.xml'), 'utf8');
+strict.ok(!compactXml.includes('[00:00:'), 'compact DOCX: no timestamps');
+// separator paragraphs = textless <w:p> without the divider border (pBdr).
+// The docx lib serializes blank runs as <w:t xml:space="preserve"></w:t> with rPr.
+const countSeparators = (xml) => {
+  const paras = xml.match(/<w:p\b.*?<\/w:p>/gs) || [];
+  return paras.filter(
+    (p) => !/<w:pBdr>/.test(p) && !/<w:t[^>]*>[^<]/.test(p)
+  ).length;
+};
+const compBlanks = countSeparators(compactXml);
+const theatreDocxBlob = await buildDocxBlob({ header: compactHeader, parsed, template: 'theatre' });
+const theatreDocxPath = join(outDir, 'theatre.docx');
+writeFileSync(theatreDocxPath, Buffer.from(await theatreDocxBlob.arrayBuffer()));
+execSync(`cd ${outDir} && unzip -o -q theatre.docx word/document.xml`);
+const theatreXml = readFileSync(join(outDir, 'word/document.xml'), 'utf8');
+const thtrBlanks = countSeparators(theatreXml);
+strict.ok(
+  compBlanks < thtrBlanks && thtrBlanks - compBlanks >= 3,
+  `compact DOCX: fewer separators (${compBlanks} vs ${thtrBlanks})`
+);
+// names still centered in compact (theatre alignment)
+const compLucy = compactXml.match(/<w:p\b[^>]*>(?:(?!<\/w:p>).)*?Lucy(?:(?!<\/w:p>).)*?<\/w:p>/s);
+strict.ok(compLucy && /w:left="(\d+)"/.test(compLucy[0]), 'compact DOCX: name still centered');
+
+const compactPdfDoc = buildPdfDoc({ header: compactHeader, parsed, template: 'compact' });
+const compactPdfPath = join(outDir, 'compact.pdf');
+writeFileSync(compactPdfPath, Buffer.from(compactPdfDoc.output('arraybuffer')));
+if (hasPdftotext) {
+  const cTxt = execSync(`pdftotext -layout ${compactPdfPath} - 2>/dev/null`, {
+    encoding: 'utf8',
+    shell: '/bin/bash',
+  });
+  strict.ok(!cTxt.includes('[00:00:'), 'compact PDF: no timestamps');
+  // no blank lines between body blocks: find first Lucy line, ensure next non-empty
+  // content follows immediately (dialogue), not an empty line then timestamp
+  const linesArr = cTxt.split('\n');
+  const lucyIdx = linesArr.findIndex((l) => l.trim() === 'Lucy');
+  strict.ok(lucyIdx >= 0, 'compact PDF: Lucy present');
+  strict.ok(
+    linesArr[lucyIdx + 1] && linesArr[lucyIdx + 1].trim() !== '',
+    'compact PDF: dialogue directly after name (no blank line)'
+  );
+  // density check: compact must have strictly fewer lines than theatre
+  const theatrePdfDoc2 = buildPdfDoc({ header: compactHeader, parsed, template: 'theatre' });
+  const theatrePdfPath2 = join(outDir, 'theatre.pdf');
+  writeFileSync(theatrePdfPath2, Buffer.from(theatrePdfDoc2.output('arraybuffer')));
+  const tTxt = execSync(`pdftotext -layout ${theatrePdfPath2} - 2>/dev/null`, {
+    encoding: 'utf8',
+    shell: '/bin/bash',
+  });
+  const countNonEmpty = (s) => s.split('\n').filter((l) => l.trim()).length;
+  strict.ok(
+    countNonEmpty(cTxt) < countNonEmpty(tTxt),
+    `compact PDF denser than theatre (${countNonEmpty(cTxt)} < ${countNonEmpty(tTxt)} lines)`
+  );
+}
+console.log('✓ compact template OK (DOCX + PDF)');
+
 console.log('files:', outDir, '/test.docx, /test.pdf');
